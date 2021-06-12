@@ -6,7 +6,11 @@ exports.up = function (knex) {
         table.boolean('isBusy').defaultTo(false);
         table.string('roomId');
 
-        table.foreign('roomId').references('id').inTable('room');
+        table.foreign('roomId')
+            .references('id')
+            .inTable('room')
+            .onDelete('CASCADE')
+            .onUpdate('CASCADE');
     })
 };
 
