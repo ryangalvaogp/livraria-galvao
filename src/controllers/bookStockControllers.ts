@@ -21,6 +21,7 @@ export default {
                     'amount',
                     'factoryPrice',
                     'salePrice',
+                    'likes',
                 );
 
             return res.json(allBooksInStock);
@@ -54,6 +55,7 @@ export default {
 
         try {
             const book = await connection('bookStock')
+                .innerJoin('books', 'books.id', 'bookStock.idBook')
                 .select('*')
                 .where('idBook', idBook)
                 .first();

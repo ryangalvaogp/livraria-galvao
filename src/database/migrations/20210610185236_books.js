@@ -12,6 +12,7 @@ exports.up = function (knex) {
             table.string('placeOfPublication');
             table.integer('pages').notNullable();
             table.integer('cddcdu');
+            table.integer('likes').defaultTo(0).notNullable();
         });
 };
 

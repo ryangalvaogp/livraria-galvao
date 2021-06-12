@@ -14,6 +14,7 @@ export type BookStockCrud ={
     placeOfPublication: string
     pages: number
     cddcdu: number
+    likes:number
 }
 
 export type BookStockList ={
@@ -30,4 +31,11 @@ export type BookStockList ={
     placeOfPublication: string
     pages: number
     cddcdu: number
+}
+
+export type boockStockProps = {
+    idBook: string
+    amount: number
+    salePrice: number
+    factoryPrice: number
 }
