@@ -1,8 +1,8 @@
 import { Response, Request } from 'express';
-import { connection } from '../database/connection';
-import { user, UserProps } from '../types/usersControllersTypes';
+import { connection } from '../../database/connection';
+import { user, UserProps } from '../../types/usersControllersTypes';
 import crypto from 'crypto';
-import { convertDateToPrint, getDateNow } from '../utils/date';
+import { convertDateToPrint, getDateNow } from '../../utils/date';
 
 export default {
     async index(req: Request, res: Response) {

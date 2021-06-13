@@ -1,7 +1,7 @@
 import { Response, Request } from 'express';
-import { connection } from '../database/connection';
+import { connection } from '../../database/connection';
 import crypto from 'crypto';
-import { Book, BookProps } from '../types/booksControllers'
+import { Book, BookProps } from '../../types/booksControllers'
 
 export default {
     async index(req: Request, res: Response) {
@@ -62,7 +62,7 @@ export default {
             });
         };
     },
-    
+
     async showOne(req: Request, res: Response) {
         const { id: idBook } = req.params;
 
@@ -82,7 +82,7 @@ export default {
     },
 
     async Modify(req: Request, res: Response) {
-       
+
     },
 
     async Delete(req: Request, res: Response) {

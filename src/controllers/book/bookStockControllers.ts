@@ -1,6 +1,6 @@
 import { Response, Request } from 'express';
-import { connection } from '../database/connection';
-import { BookStockCrud } from '../types/stockBoockControllersTypes';
+import { connection } from '../../database/connection';
+import { BookStockCrud } from '../../types/stockBoockControllersTypes';
 
 export default {
     async index(req: Request, res: Response) {

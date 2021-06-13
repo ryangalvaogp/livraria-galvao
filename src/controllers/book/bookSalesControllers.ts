@@ -1,9 +1,9 @@
 import { Response, Request } from 'express';
 import crypto from 'crypto';
-import { detailsPurchaseProps } from '../types/bookSalesControllersTypes';
-import { getDateNow } from '../utils/date';
-import { validateSale } from '../utils/validateSale';
-import { connection } from '../database/connection';
+import { detailsPurchaseProps } from '../../types/bookSalesControllersTypes';
+import { getDateNow } from '../../utils/date';
+import { validateSale } from '../../utils/validateSale';
+import { connection } from '../../database/connection';
 
 export default {
     async index(req: Request, res: Response) {

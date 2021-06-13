@@ -1,6 +1,6 @@
 import { Response, Request } from 'express';
-import { connection } from '../database/connection';
-import { Product } from '../types/productsControllersTypes';
+import { connection } from '../../database/connection';
+import { Product } from '../../types/productsControllersTypes';
 import crypto from 'crypto';
 
 export default {
