@@ -61,5 +61,22 @@ export default {
     },
     async Delete(req: Request, res: Response) {
 
+    }, 
+    
+    async premium(req: Request, res: Response) {
+        const { id: idUser } = req.params;
+
+        try {
+            await connection('user')
+                .where('id', idUser)
+                .update({ premium: true });
+
+            return res.json({ status: `Successfully updating user to premium` });
+        } catch (error) {
+            return res.json({
+                status: `Error updating user to premium`,
+                error
+            });
+        };
     },
-}
+};

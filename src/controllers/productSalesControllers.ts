@@ -8,29 +8,29 @@ import { connection } from '../database/connection';
 export default {
     async index(req: Request, res: Response) {
         try {
-            const allBookSales = await connection('bookSales')
+            const allProductSales = await connection('productSales')
                 .select('*');
 
-            return res.json(allBookSales);
+            return res.json(allProductSales);
         } catch (error) {
             return res.json({
-                status: `Error showing all book sales`,
+                status: `Error showing all product sales`,
                 error
             });
         }
     },
 
     async create(req: Request, res: Response) {
-        const { id: idBook } = req.params;
+        const { id: idProduct } = req.params;
         const { idclient: idClient, idemployee: idEmployee } = req.headers;
         const idSale = crypto.randomBytes(4).toString('hex');
         const detailsPurchase: detailsPurchaseProps = req.body;
 
-        const valuesBookSale = {
+        const valuesProductSale = {
             idSale,
             idClient,
             idEmployee,
-            idBook,
+            idProduct,
             amount: detailsPurchase.amount,
             offeredPrice: detailsPurchase.offeredPrice,
             soldPrice: detailsPurchase.soldPrice,
@@ -40,18 +40,23 @@ export default {
         };
 
         try {
-            const validation = await validateSale('books', valuesBookSale);
+            const validation = await validateSale('product', valuesProductSale);
 
             if (validation.isValidate === false) {
                 return res.json(validation)
             };
 
-            await connection('bookSales')
-                .insert(valuesBookSale);
+            await connection('productSales')
+                .insert(valuesProductSale);
 
-            await connection('bookStock')
-                .where('idBook', idBook)
-                .update('amount', (validation.currentAmount - valuesBookSale.amount))
+                console.log({
+                    currentAmount:validation.currentAmount,
+                    amount:valuesProductSale.amount,
+                    sub:validation.currentAmount - valuesProductSale.amount
+                })
+            await connection('productsStock')
+                .where('idProduct', idProduct)
+                .update('amount', (validation.currentAmount - valuesProductSale.amount))
 
             return res.json({ status: 'Successful purchase' });
         } catch (error) {
@@ -62,7 +67,7 @@ export default {
         const { id: idSale } = req.params;
 
         try {
-            const sale = await connection('bookSales')
+            const sale = await connection('productSales')
                 .select('*')
                 .where('idSale', idSale)
                 .first();
@@ -70,7 +75,7 @@ export default {
             return res.json(sale);
         } catch (error) {
             return res.json({
-                status: `Error showing book sale`,
+                status: `Error showing product sale`,
                 error
             });
         };
@@ -82,14 +87,14 @@ export default {
         const { id: idSale } = req.params;
 
         try {
-            await connection('bookSales')
+            await connection('productSales')
                 .where('idSale', idSale)
                 .delete();
 
-            return res.json({ status: `Successfully deleted book sale removed successfully` });
+            return res.json({ status: `Successfully deleted product sale removed successfully` });
         } catch (error) {
             return res.json({
-                status: `Error removing book sale`,
+                status: `Error removing product sale`,
                 error
             });
         };
