@@ -1,4 +1,11 @@
 import knex from 'knex';
 import config from '../../knexfile'
+import env from 'dotenv';
 
-export const connection = knex(config.development);
+env.config();
+
+export const connection = knex(
+    process.env.NODE_ENV==='development'
+    ? config.development
+    : config.staging
+);
