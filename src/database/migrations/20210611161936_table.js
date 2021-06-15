@@ -2,7 +2,7 @@ exports.up = function (knex) {
     return knex.schema.createTable('table', function (table) {
         table.string('id').primary();
         table.string('title');
-        table.boolean('capacity');
+        table.integer('capacity');
         table.boolean('isBusy').defaultTo(false);
         table.string('roomId');
 
@@ -10,7 +10,7 @@ exports.up = function (knex) {
             .references('id')
             .inTable('room')
             .onDelete('CASCADE')
-            .onUpdate('CASCADE');
+            .onUpdate('CASCADE')
     })
 };
 
