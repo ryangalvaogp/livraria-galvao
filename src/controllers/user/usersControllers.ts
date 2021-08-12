@@ -27,6 +27,7 @@ export default {
                 },
                 xp: user.xp,
                 registrationDate: user.registrationDate,
+                avatarUrl:user.avatarurl
             }
         });
 
