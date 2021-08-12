@@ -1,15 +1,38 @@
-import { Response, Request } from 'express';
-import crypto from 'crypto';
-import { detailsPurchaseProps } from '../../types/bookSalesControllersTypes';
-import { getDateNow } from '../../utils/date';
-import { validateSale } from '../../utils/validateSale';
 import { connection } from '../../database/connection';
+import crypto from 'crypto';
+import { getDateNow } from '../../utils/date';
+import { checkCouponExistenceInSale, validateCupom } from '../../utils/validateCoupon';
+import { validateSale } from '../../utils/validateSale';
+import { Response, Request } from 'express';
+import { detailsPurchaseProps, valuesBookSale } from '../../types/bookSalesControllersTypes';
 
 export default {
     async index(req: Request, res: Response) {
         try {
             const allProductSales = await connection('productSales')
                 .select('*');
+
+            for (let i = 0; i < allProductSales.length; i++) {
+                //@ts-ignore
+                const useCoupon: valuesBookSale['useCoupon'] = await checkCouponExistenceInSale('product', allProductSales[i].idSale);
+
+                try {
+                    if (!useCoupon) {
+                        throw new Error('This sale has not used Coupon')
+                    };
+                    for (let i = 0; i < allProductSales.length; i++) {
+                        try {//@ts-ignore
+                            if (useCoupon.idSale === allProductSales[i].idSale) {
+                                allProductSales[i].useCoupon = useCoupon;
+                            };
+                        } catch (error) {
+                            //No need to return anything
+                        };
+                    };
+                } catch (error) {
+                    console.log(error)//No need to return anything
+                }
+            };
 
             return res.json(allProductSales);
         } catch (error) {
@@ -40,23 +63,47 @@ export default {
         };
 
         try {
+            let idUserCoupon: string;
+
+            if (detailsPurchase.coupon) {
+                const validationCoupom = await validateCupom({
+                    idUser: idClient,
+                    idCupom: detailsPurchase.coupon,
+                    type: 'product',
+                });
+
+                valuesProductSale.soldPrice -= validationCoupom.amount;
+                idUserCoupon = validationCoupom.id;
+            };
+
             const validation = await validateSale('product', valuesProductSale);
 
-            if (validation.isValidate === false) {
-                return res.json(validation)
+            if (!validation.isValidate) {
+                return res.json(validation);
             };
 
             await connection('productSales')
                 .insert(valuesProductSale);
 
-                console.log({
-                    currentAmount:validation.currentAmount,
-                    amount:valuesProductSale.amount,
-                    sub:validation.currentAmount - valuesProductSale.amount
-                })
             await connection('productsStock')
                 .where('idProduct', idProduct)
-                .update('amount', (validation.currentAmount - valuesProductSale.amount))
+                .update('amount', (validation.currentAmount - valuesProductSale.amount));
+
+            if (detailsPurchase.coupon) {
+                await connection('userCoupons')
+                    .where('id', idUserCoupon)
+                    .update({
+                        isCollected: true,
+                        collectedDate: getDateNow(),
+                    });
+
+                await connection('useCoupon')
+                    .insert({
+                        id: crypto.randomBytes(6).toString('hex'),
+                        idUserCoupon: idUserCoupon,
+                        idSale
+                    })
+            };
 
             return res.json({ status: 'Successful purchase' });
         } catch (error) {
@@ -71,6 +118,25 @@ export default {
                 .select('*')
                 .where('idSale', idSale)
                 .first();
+
+                try {
+                    //@ts-ignore
+                    const useCoupon: valuesBookSale['useCoupon'] = await checkCouponExistenceInSale('product', sale.idSale);
+    
+                    try {
+                        if (!useCoupon) {
+                            throw new Error('This sale has not used Coupon')
+                        };
+    
+                        if (useCoupon.idSale === sale.idSale) {
+                            sale.useCoupon = useCoupon;
+                        };
+                    } catch (error) {
+                         //No need to return anything
+                    }
+                } catch (error) {
+                     //No need to return anything
+                }
 
             return res.json(sale);
         } catch (error) {

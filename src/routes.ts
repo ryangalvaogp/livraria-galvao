@@ -1,7 +1,8 @@
 import express from 'express';
-import { achievementControllers } from './controllers/achievement/indexAchievementControllers';
 
+import { achievementControllers } from './controllers/achievement/indexAchievementControllers';
 import { bookControllers } from './controllers/book/indexBookControllers';
+import { couponControllers } from './controllers/coupon/indexCouponControllers';
 import { mainControll } from './controllers/main/indexMainControllers';
 import { productControllers } from './controllers/product/indexProductControllers';
 import { roomControllers } from './controllers/room/indexRoomControllers';
@@ -17,3 +18,4 @@ route.use(productControllers);
 route.use(roomControllers);
 route.use(tableControllers);
 route.use(achievementControllers);
+route.use(couponControllers);

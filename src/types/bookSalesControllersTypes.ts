@@ -1,9 +1,12 @@
+import { UserCouponsValidadeProps } from "../utils/validateCoupon"
+
 export type detailsPurchaseProps = {
     amount: number
     offeredPrice: number
     soldPrice: number
     factoryPrice: number
     paymentMethod: string
+    coupon:string
 }
 
 export type valuesBookSale = {
@@ -16,6 +19,13 @@ export type valuesBookSale = {
     soldPrice: number
     factoryPrice: number
     paymentMethod: string
-    saleDate: string
-    
+    saleDate: string   
+    useCoupon?:{
+        id: string
+        idUserCoupon: string
+        idSale: string
+        idUser: string
+        idCoupon: string
+        isCollected: boolean
+        collectedDate: string}
 }

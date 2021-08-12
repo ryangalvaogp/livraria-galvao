@@ -3,6 +3,7 @@ exports.up = function (knex) {
     return knex.schema
         .createTable('user', function (table) {
             table.string('id').primary();
+            table.string('avatarUrl').defaultTo('https://upload.wikimedia.org/wikipedia/commons/6/6e/Breezeicons-actions-22-im-user.svg')
             table.string('name').notNullable();
             table.string('email').notNullable();
             table.string('city').notNullable();

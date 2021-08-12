@@ -1,15 +1,39 @@
-import { Response, Request } from 'express';
-import crypto from 'crypto';
-import { detailsPurchaseProps } from '../../types/bookSalesControllersTypes';
-import { getDateNow } from '../../utils/date';
-import { validateSale } from '../../utils/validateSale';
 import { connection } from '../../database/connection';
+import crypto from 'crypto';
+import { getDateNow } from '../../utils/date';
+import { checkCouponExistenceInSale, validateCupom } from '../../utils/validateCoupon';
+import { validateSale } from '../../utils/validateSale';
+import { Response, Request } from 'express';
+import { detailsPurchaseProps, valuesBookSale } from '../../types/bookSalesControllersTypes';
 
 export default {
     async index(req: Request, res: Response) {
         try {
-            const allBookSales = await connection('bookSales')
+            const allBookSales = await connection<valuesBookSale>('bookSales')
                 .select('*');
+
+            for (let i = 0; i < allBookSales.length; i++) {
+                //@ts-ignore
+                const useCoupon: valuesBookSale['useCoupon'] = await checkCouponExistenceInSale('book', allBookSales[i].idSale);
+
+                try {
+                    if (!useCoupon) {
+                        throw new Error('This sale has not used Coupon')
+                    };
+
+                    for (let i = 0; i < allBookSales.length; i++) {
+                        try {//@ts-ignore
+                            if (useCoupon.idSale === allBookSales[i].idSale) {
+                                allBookSales[i].useCoupon = useCoupon;
+                            };
+                        } catch (error) {
+                            //No need to return anything
+                        };
+                    };
+                } catch (error) {
+                    //No need to return anything
+                };
+            };
 
             return res.json(allBookSales);
         } catch (error) {
@@ -17,7 +41,7 @@ export default {
                 status: `Error showing all book sales`,
                 error
             });
-        }
+        };
     },
 
     async create(req: Request, res: Response) {
@@ -26,7 +50,7 @@ export default {
         const idSale = crypto.randomBytes(4).toString('hex');
         const detailsPurchase: detailsPurchaseProps = req.body;
 
-        const valuesBookSale = {
+        let valuesBookSale = {
             idSale,
             idClient,
             idEmployee,
@@ -40,10 +64,23 @@ export default {
         };
 
         try {
-            const validation = await validateSale('books', valuesBookSale);
+            let idUserCoupon: string;
 
-            if (validation.isValidate === false) {
-                return res.json(validation)
+            if (detailsPurchase.coupon) {
+                const validationCoupom = await validateCupom({
+                    idUser: idClient,
+                    idCupom: detailsPurchase.coupon,
+                    type: 'book'
+                });
+
+                valuesBookSale.soldPrice -= validationCoupom.amount;
+                idUserCoupon = validationCoupom.id;
+            };
+
+            const validationSale = await validateSale('books', valuesBookSale);
+
+            if (validationSale.isValidate === false) {
+                return res.json(validationSale);
             };
 
             await connection('bookSales')
@@ -51,13 +88,29 @@ export default {
 
             await connection('bookStock')
                 .where('idBook', idBook)
-                .update('amount', (validation.currentAmount - valuesBookSale.amount))
+                .update('amount', (validationSale.currentAmount - valuesBookSale.amount));
 
+            if (detailsPurchase.coupon) {
+                await connection('userCoupons')
+                    .where('id', idUserCoupon)
+                    .update({
+                        isCollected: true,
+                        collectedDate: getDateNow(),
+                    });
+
+                await connection('useCoupon')
+                    .insert({
+                        id: crypto.randomBytes(6).toString('hex'),
+                        idUserCoupon: idUserCoupon,
+                        idSale
+                    })
+            };
             return res.json({ status: 'Successful purchase' });
         } catch (error) {
-            return res.json({ status: 'Purchase error', error })
+            return res.json({ status: 'Purchase error', error });
         };
     },
+
     async showOne(req: Request, res: Response) {
         const { id: idSale } = req.params;
 
@@ -66,6 +119,27 @@ export default {
                 .select('*')
                 .where('idSale', idSale)
                 .first();
+            
+            try {
+                //@ts-ignore
+                const useCoupon: valuesBookSale['useCoupon'] = await checkCouponExistenceInSale('book', sale.idSale);
+
+                try {
+                    if (!useCoupon) {
+                        throw new Error('This sale has not used Coupon')
+                    };
+
+                    if (useCoupon.idSale === sale.idSale) {
+                        sale.useCoupon = useCoupon;
+                    };
+                } catch (error) {
+                     //No need to return anything
+                }
+            } catch (error) {
+                 //No need to return anything
+            }
+
+            
 
             return res.json(sale);
         } catch (error) {

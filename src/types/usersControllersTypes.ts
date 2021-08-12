@@ -14,6 +14,7 @@ export type user ={
     xp: number
     premium: boolean
     registrationDate: string
+    avatarurl?:string
 }
 export type UserProps = {
     list: user[],
