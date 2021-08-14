@@ -1,17 +1,18 @@
 import { Response, Request } from 'express';
 import { connection } from '../../database/connection';
 import { ProductStockCrud } from '../../types/productStockControllersTypes';
+import checkAuthorization from '../../utils/checkAuthorization';
 
 export default {
     async index(req: Request, res: Response) {
         try {
-            const allProductsInStock:ProductStockCrud[] = await connection<ProductStockCrud>('productsStock')
+            const allProductsInStock: ProductStockCrud[] = await connection<ProductStockCrud>('productsStock')
                 .innerJoin('products', 'productsStock.idProduct', 'products.id')
                 .select(
                     'idProduct',
-                    'title',                    
+                    'title',
                     'category',
-                    'description',  
+                    'description',
                     'amount',
                     'factoryPrice',
                     'salePrice',
@@ -29,24 +30,31 @@ export default {
 
     async create(req: Request, res: Response) {
         const { id: idProduct } = req.params;
+        const { authorization } = req.headers;
         const values = req.body;
 
         values.idProduct = idProduct;
 
         try {
+            const validateAuthorization = await checkAuthorization(authorization, 2);
+
+            if (!validateAuthorization.status) {
+                throw new Error(validateAuthorization.error);
+            };
+
             await connection('productsStock').insert(values);
 
-            return res.json({ status: `Successfully updating product price` });
+            return res.json({ status: `Successfully added product to stock` });
         } catch (error) {
             return res.json({
-                status: `Error updating product price`,
+                status: `Error adding product to stock`,
                 error
             });
         }
     },
     async showOne(req: Request, res: Response) {
         const { id: idProduct } = req.params;
-        
+
         try {
             const product = await connection('productsStock')
                 .innerJoin('products', 'products.id', 'productsStock.idProduct')
@@ -65,8 +73,15 @@ export default {
     async Modify(req: Request, res: Response) {
         const { id: idProduct } = req.params;
         const { salePrice } = req.body;
+        const { authorization } = req.headers;
 
         try {
+            const validateAuthorization = await checkAuthorization(authorization, 2);
+
+            if (!validateAuthorization.status) {
+                throw new Error(validateAuthorization.error);
+            };
+
             await connection('productsStock')
                 .where('idProduct', idProduct)
                 .update({ salePrice });
@@ -81,8 +96,15 @@ export default {
     },
     async Delete(req: Request, res: Response) {
         const { id: idProduct } = req.params;
+        const { authorization } = req.headers;
 
         try {
+            const validateAuthorization = await checkAuthorization(authorization, 3);
+
+            if (!validateAuthorization.status) {
+                throw new Error(validateAuthorization.error);
+            };
+
             await connection('productsStock')
                 .where('idProduct', idProduct)
                 .delete();

@@ -5,10 +5,19 @@ import { checkCouponExistenceInSale, validateCupom } from '../../utils/validateC
 import { validateSale } from '../../utils/validateSale';
 import { Response, Request } from 'express';
 import { detailsPurchaseProps, valuesBookSale } from '../../types/bookSalesControllersTypes';
+import checkAuthorization from '../../utils/checkAuthorization';
 
 export default {
     async index(req: Request, res: Response) {
+        const { authorization } = req.headers;
+
         try {
+            const validateAuthorization = await checkAuthorization(authorization, 2);
+
+            if (!validateAuthorization.status) {
+                throw new Error(validateAuthorization.error);
+            };
+
             const allProductSales = await connection('productSales')
                 .select('*');
 
@@ -45,7 +54,11 @@ export default {
 
     async create(req: Request, res: Response) {
         const { id: idProduct } = req.params;
-        const { idclient: idClient, idemployee: idEmployee } = req.headers;
+        const {
+            idclient: idClient,
+            idemployee: idEmployee,
+            authorization
+        } = req.headers;
         const idSale = crypto.randomBytes(4).toString('hex');
         const detailsPurchase: detailsPurchaseProps = req.body;
 
@@ -63,6 +76,13 @@ export default {
         };
 
         try {
+            const validateAuthorization = await checkAuthorization(authorization, 2);
+
+            if (!validateAuthorization.status) {
+                throw new Error(validateAuthorization.error);
+            };
+
+
             let idUserCoupon: string;
 
             if (detailsPurchase.coupon) {
@@ -112,31 +132,38 @@ export default {
     },
     async showOne(req: Request, res: Response) {
         const { id: idSale } = req.params;
+        const { authorization } = req.headers;
 
         try {
+
+            const validateAuthorization = await checkAuthorization(authorization, 2);
+
+            if (!validateAuthorization.status) {
+                throw new Error(validateAuthorization.error);
+            };
             const sale = await connection('productSales')
                 .select('*')
                 .where('idSale', idSale)
                 .first();
 
+            try {
+                //@ts-ignore
+                const useCoupon: valuesBookSale['useCoupon'] = await checkCouponExistenceInSale('product', sale.idSale);
+
                 try {
-                    //@ts-ignore
-                    const useCoupon: valuesBookSale['useCoupon'] = await checkCouponExistenceInSale('product', sale.idSale);
-    
-                    try {
-                        if (!useCoupon) {
-                            throw new Error('This sale has not used Coupon')
-                        };
-    
-                        if (useCoupon.idSale === sale.idSale) {
-                            sale.useCoupon = useCoupon;
-                        };
-                    } catch (error) {
-                         //No need to return anything
-                    }
+                    if (!useCoupon) {
+                        throw new Error('This sale has not used Coupon')
+                    };
+
+                    if (useCoupon.idSale === sale.idSale) {
+                        sale.useCoupon = useCoupon;
+                    };
                 } catch (error) {
-                     //No need to return anything
+                    //No need to return anything
                 }
+            } catch (error) {
+                //No need to return anything
+            }
 
             return res.json(sale);
         } catch (error) {
@@ -151,8 +178,15 @@ export default {
     },
     async Delete(req: Request, res: Response) {
         const { id: idSale } = req.params;
+        const { authorization } = req.headers;
 
         try {
+            const validateAuthorization = await checkAuthorization(authorization, 3);
+
+            if (!validateAuthorization.status) {
+                throw new Error(validateAuthorization.error);
+            };
+
             await connection('productSales')
                 .where('idSale', idSale)
                 .delete();

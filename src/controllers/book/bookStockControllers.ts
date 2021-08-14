@@ -1,6 +1,7 @@
 import { Response, Request } from 'express';
 import { connection } from '../../database/connection';
 import { BookStockCrud } from '../../types/stockBoockControllersTypes';
+import checkAuthorization from '../../utils/checkAuthorization';
 
 export default {
     async index(req: Request, res: Response) {
@@ -35,11 +36,18 @@ export default {
 
     async create(req: Request, res: Response) {
         const { id: idBook } = req.params;
+        const { authorization } = req.headers;
         const values = req.body;
 
         values.idBook = idBook;
 
         try {
+            const validateAuthorization = await checkAuthorization(authorization, 2);
+
+            if (!validateAuthorization.status) {
+                throw new Error(validateAuthorization.error);
+            };
+
             await connection('bookStock').insert(values);
 
             return res.json({ status: `Successfully updating book price` });
@@ -71,8 +79,14 @@ export default {
     async Modify(req: Request, res: Response) {
         const { id: idBook } = req.params;
         const { salePrice } = req.body;
+        const { authorization } = req.headers;
 
         try {
+            const validateAuthorization = await checkAuthorization(authorization, 2);
+
+            if (!validateAuthorization.status) {
+                throw new Error(validateAuthorization.error);
+            };
             await connection('bookStock')
                 .where('idBook', idBook)
                 .update({ salePrice });
@@ -87,8 +101,14 @@ export default {
     },
     async Delete(req: Request, res: Response) {
         const { id: idBook } = req.params;
+        const { authorization } = req.headers;
 
         try {
+            const validateAuthorization = await checkAuthorization(authorization, 3);
+
+            if (!validateAuthorization.status) {
+                throw new Error(validateAuthorization.error);
+            };
             await connection('bookStock')
                 .where('idBook', idBook)
                 .delete();

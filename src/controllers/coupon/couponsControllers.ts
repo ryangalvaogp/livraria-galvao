@@ -2,6 +2,7 @@ import { Response, Request } from 'express';
 import { connection } from '../../database/connection';
 import crypto from 'crypto';
 import { CouponsProps } from '../../types/couponControllers';
+import checkAuthorization from '../../utils/checkAuthorization';
 
 export default {
     async index(req: Request, res: Response) {
@@ -21,7 +22,7 @@ export default {
         const id = crypto.randomBytes(4).toString('hex');
         const valuesCoupon: CouponsProps = req.body;
         valuesCoupon.id = id;
-        
+
         try {
             await connection<CouponsProps>('coupon').insert(valuesCoupon);
 
@@ -55,8 +56,14 @@ export default {
     async Modify(req: Request, res: Response) {
         const { id: idCoupon } = req.params;
         const newValues = req.body;
+        const { authorization } = req.headers;
 
         try {
+            const validateAuthorization = await checkAuthorization(authorization, 2);
+
+            if (!validateAuthorization.status) {
+                throw new Error(validateAuthorization.error);
+            };
             await connection<CouponsProps>('coupon')
                 .where('id', idCoupon)
                 .update(newValues);
@@ -74,8 +81,14 @@ export default {
 
     async Delete(req: Request, res: Response) {
         const { id: idCoupon } = req.params;
+        const { authorization } = req.headers;
 
         try {
+            const validateAuthorization = await checkAuthorization(authorization, 3);
+
+            if (!validateAuthorization.status) {
+                throw new Error(validateAuthorization.error);
+            };
             await connection<CouponsProps>('coupon')
                 .where('id', idCoupon)
                 .delete();
