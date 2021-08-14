@@ -1,13 +1,21 @@
 import { Response, Request } from 'express';
 import { connection } from '../../database/connection';
 import { UserAchievementsProps } from '../../types/userAchievementControllersTypes';
-import { convertDateToPrint, getDateNow } from '../../utils/date';
+import { getDateNow } from '../../utils/date';
 import crypto from 'crypto';
 import { UserCouponsProps } from '../../types/userCouponsControllersTypes';
+import checkAuthorization from '../../utils/checkAuthorization';
 
 export default {
     async index(req: Request, res: Response) {
+        const { authorization } = req.headers;
+
         try {
+            const validateAuthorization = await checkAuthorization(authorization, 2);
+
+            if (!validateAuthorization.status) {
+                throw new Error(validateAuthorization.error);
+            };
             let allUserCoupons = await connection<UserCouponsProps>
                 ('userCoupons')
                 .innerJoin('user', 'user.id', 'userCoupons.idUser')
@@ -55,8 +63,14 @@ export default {
         values.idCoupon = req.headers.idcoupon;
         values.idUser = req.headers.iduser;
 
+        const { authorization } = req.headers;
+
         try {
-            
+            const validateAuthorization = await checkAuthorization(authorization, 2);
+
+            if (!validateAuthorization.status) {
+                throw new Error(validateAuthorization.error);
+            };
 
             const valuesUserCoupon: UserCouponsProps = {
                 id,
@@ -83,8 +97,18 @@ export default {
 
     async showOne(req: Request, res: Response) {
         const { id: idUser } = req.params;
+        const { authorization } = req.headers;
 
         try {
+
+            if (idUser !== authorization) {
+                const validateAuthorization = await checkAuthorization(authorization, 2);
+
+                if (!validateAuthorization.status) {
+                    throw new Error(validateAuthorization.error);
+                };
+            }
+
             let userCoupons = await connection<UserCouponsProps>
                 ('userCoupons')
                 .innerJoin('user', 'user.id', 'userCoupons.idUser')
@@ -130,10 +154,17 @@ export default {
 
     async Modify(req: Request, res: Response) {
         const { id: idUserCoupon } = req.params;
+        const { authorization } = req.headers;
         const newValues = req.body;
         newValues.collectedDate = getDateNow();
 
         try {
+            const validateAuthorization = await checkAuthorization(authorization, 2);
+
+            if (!validateAuthorization.status) {
+                throw new Error(validateAuthorization.error);
+            };
+
             await connection<UserAchievementsProps>
                 ('userCoupons')
                 .where('id', idUserCoupon)
@@ -152,8 +183,14 @@ export default {
 
     async Delete(req: Request, res: Response) {
         const { id: idUserCoupon } = req.params;
+        const { authorization } = req.headers;
 
         try {
+            const validateAuthorization = await checkAuthorization(authorization, 3);
+
+            if (!validateAuthorization.status) {
+                throw new Error(validateAuthorization.error);
+            };
             await connection<UserCouponsProps>('userCoupons')
                 .where('id', idUserCoupon)
                 .delete();

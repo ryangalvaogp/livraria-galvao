@@ -3,6 +3,7 @@ import { connection } from '../../database/connection';
 import { AchievementProps } from '../../types/achievementControllerstTypes';
 import crypto from 'crypto';
 import { useCSV } from '../../utils/useCSV';
+import checkAuthorization from '../../utils/checkAuthorization';
 
 export default {
     async index(req: Request, res: Response) {
@@ -22,10 +23,16 @@ export default {
         const id = crypto.randomBytes(4).toString('hex');
         const values = req.body;
         const csv = req.file;
+        const { authorization } = req.headers;
 
         let valuesAchievement: AchievementProps[] | AchievementProps
 
         try {
+            const validateAuthorization = await checkAuthorization(authorization, 3);
+
+            if (!validateAuthorization.status) {
+                throw new Error(validateAuthorization.error);
+            };
             if (!req.file || (req.file && req.body)) {
                 valuesAchievement = {
                     id,
@@ -77,8 +84,14 @@ export default {
     async Modify(req: Request, res: Response) {
         const { id: idAchievement } = req.params;
         const newValues = req.body;
+        const { authorization } = req.headers;
 
         try {
+            const validateAuthorization = await checkAuthorization(authorization, 3);
+
+            if (!validateAuthorization.status) {
+                throw new Error(validateAuthorization.error);
+            };
             await connection('achievement')
                 .where('id', idAchievement)
                 .update(newValues);
@@ -96,8 +109,14 @@ export default {
 
     async Delete(req: Request, res: Response) {
         const { id: idAchievement } = req.params;
+        const { authorization } = req.headers;
 
         try {
+            const validateAuthorization = await checkAuthorization(authorization, 3);
+
+            if (!validateAuthorization.status) {
+                throw new Error(validateAuthorization.error);
+            };
             await connection('achievement')
                 .where('id', idAchievement)
                 .delete();

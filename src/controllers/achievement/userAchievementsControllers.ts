@@ -3,10 +3,18 @@ import { connection } from '../../database/connection';
 import { UserAchievementsProps } from '../../types/userAchievementControllersTypes';
 import { convertDateToPrint, getDateNow } from '../../utils/date';
 import crypto from 'crypto';
+import checkAuthorization from '../../utils/checkAuthorization';
 
 export default {
     async index(req: Request, res: Response) {
+        const { authorization } = req.headers;
+
         try {
+            const validateAuthorization = await checkAuthorization(authorization, 2);
+
+            if (!validateAuthorization.status) {
+                throw new Error(validateAuthorization.error);
+            };
             let allUserAchievements = await connection<UserAchievementsProps>
                 ('userAchievements')
                 .innerJoin('user', 'user.id', 'userAchievements.idUser')
@@ -54,8 +62,14 @@ export default {
         const values = req.body;
         values.idAchievement = req.headers.idachievement;
         values.idUser = req.headers.iduser;
+        const { authorization } = req.headers;
 
         try {
+            const validateAuthorization = await checkAuthorization(authorization, 2);
+
+            if (!validateAuthorization.status) {
+                throw new Error(validateAuthorization.error);
+            };
 
             const valuesUserAchievement: UserAchievementsProps = {
                 id,
@@ -82,8 +96,17 @@ export default {
 
     async showOne(req: Request, res: Response) {
         const { id: idUser } = req.params;
+        const { authorization } = req.headers;
 
         try {
+            if (idUser !== authorization) {
+                const validateAuthorization = await checkAuthorization(authorization, 2);
+
+                if (!validateAuthorization.status) {
+                    throw new Error(validateAuthorization.error);
+                };
+            };
+
             let userAchievements = await connection<UserAchievementsProps>
                 ('userAchievements')
                 .innerJoin('user', 'user.id', 'userAchievements.idUser')
@@ -131,10 +154,17 @@ export default {
 
     async Modify(req: Request, res: Response) {
         const { id: idUserAchievement } = req.params;
+        const { authorization } = req.headers;
         const newValues = req.body;
         newValues.collectedDate = getDateNow();
 
         try {
+            const validateAuthorization = await checkAuthorization(authorization, 2);
+
+            if (!validateAuthorization.status) {
+                throw new Error(validateAuthorization.error);
+            };
+
             await connection<UserAchievementsProps>
                 ('userAchievements')
                 .where('id', idUserAchievement)
@@ -153,8 +183,14 @@ export default {
 
     async Delete(req: Request, res: Response) {
         const { id: idUserAchievement } = req.params;
+        const { authorization } = req.headers;
 
         try {
+            const validateAuthorization = await checkAuthorization(authorization, 2);
+
+            if (!validateAuthorization.status) {
+                throw new Error(validateAuthorization.error);
+            };
             await connection<UserAchievementsProps>('userAchievements')
                 .where('id', idUserAchievement)
                 .delete();

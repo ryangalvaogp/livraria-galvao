@@ -2,6 +2,7 @@ import { Response, Request } from 'express';
 import { connection } from '../../database/connection';
 import { Product } from '../../types/productsControllersTypes';
 import crypto from 'crypto';
+import checkAuthorization from '../../utils/checkAuthorization';
 
 export default {
     async index(req: Request, res: Response) {
@@ -19,6 +20,7 @@ export default {
 
     async create(req: Request, res: Response) {
         const product = req.body;
+        const { authorization } = req.headers;
         const id = crypto.randomBytes(4).toString('hex');
 
         const values = product;
@@ -32,6 +34,11 @@ export default {
         };
 
         try {
+            const validateAuthorization = await checkAuthorization(authorization, 2);
+
+            if (!validateAuthorization.status) {
+                throw new Error(validateAuthorization.error);
+            };
             if (values.amount && values.salePrice && values.factoryPrice) {
                 const valuesProductStock = {
                     idProduct: id,
@@ -78,8 +85,15 @@ export default {
     },
     async Delete(req: Request, res: Response) {
         const { id: idProduct } = req.params;
+        const { authorization } = req.headers;
 
         try {
+            const validateAuthorization = await checkAuthorization(authorization, 3);
+
+            if (!validateAuthorization.status) {
+                throw new Error(validateAuthorization.error);
+            };
+
             await connection('products')
                 .where('id', idProduct)
                 .delete();
