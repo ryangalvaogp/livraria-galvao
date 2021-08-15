@@ -2,6 +2,7 @@ import { Response, Request } from 'express';
 import { connection } from '../../database/connection';
 import crypto from 'crypto';
 import { TableProps } from '../../types/tablesControllers';
+import checkAuthorization from '../../utils/checkAuthorization';
 
 export default {
     async index(req: Request, res: Response) {
@@ -12,6 +13,7 @@ export default {
 
     async create(req: Request, res: Response) {
         const { roomid: roomId } = req.headers;
+        const { authorization } = req.headers;
         const values: TableProps = req.body;
 
         const id = crypto.randomBytes(4).toString('hex');
@@ -24,6 +26,11 @@ export default {
         };
 
         try {
+            const validateAuthorization = await checkAuthorization(authorization, 2);
+
+            if (!validateAuthorization.status) {
+                throw new Error(validateAuthorization.error);
+            };
             await connection<TableProps>('table').insert(valuesTableInsert);
 
             return res.json({ status: `Table ${valuesTableInsert.title} has been successfully added` });
@@ -76,8 +83,14 @@ export default {
 
     async Delete(req: Request, res: Response) {
         const { id: idTable } = req.params;
+        const { authorization } = req.headers;
 
         try {
+            const validateAuthorization = await checkAuthorization(authorization, 2);
+
+            if (!validateAuthorization.status) {
+                throw new Error(validateAuthorization.error);
+            };
             await connection<TableProps>('table')
                 .where('id', idTable)
                 .delete();
