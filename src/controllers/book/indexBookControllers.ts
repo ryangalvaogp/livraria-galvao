@@ -2,6 +2,7 @@ import express from 'express';
 import bookSalesControllers from './bookSalesControllers';
 import booksControllers from './booksControllers';
 import bookStockControllers from './bookStockControllers';
+import bookUserReadControllers from './bookUserReadControllers';
 
 export const bookControllers = express.Router();
 
@@ -20,3 +21,9 @@ bookControllers.get('/purchase/book', bookSalesControllers.index);
 bookControllers.get('/purchase/book/:id', bookSalesControllers.showOne);
 bookControllers.post('/purchase/book/:id', bookSalesControllers.create);
 bookControllers.delete('/purchase/book/:id', bookSalesControllers.Delete);
+
+bookControllers.get('/passport/', bookUserReadControllers.index);
+bookControllers.get('/passport/:id', bookUserReadControllers.showOne);
+bookControllers.post('/passport/', bookUserReadControllers.create);
+bookControllers.put('/passport/:id', bookUserReadControllers.Modify);
+bookControllers.delete('/passport/:id', bookUserReadControllers.Delete);
