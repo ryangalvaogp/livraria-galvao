@@ -2,7 +2,7 @@ import { Response, Request } from 'express';
 import { connection } from '../../database/connection';
 import crypto from 'crypto';
 import { Book, BookProps } from '../../types/booksControllers'
-import checkAuthorization from '../../utils/checkAuthorization';
+import checkAuthorization, { checkToken } from '../../utils/checkAuthorization';
 
 export default {
     async index(req: Request, res: Response) {
@@ -20,7 +20,7 @@ export default {
 
     async create(req: Request, res: Response) {
         const book = req.body;
-        const { authorization } = req.headers;
+        let { authorization } = req.headers;
         const id = crypto.randomBytes(4).toString('hex');
 
         const values: BookProps['create']['crud']['tableBook'] = book;
@@ -41,6 +41,13 @@ export default {
 
 
         try {
+            await checkToken(authorization).then(res => {
+                if (res.error) {
+                    throw new Error(res.error);
+                }
+                authorization = res.authorization
+            });
+
             const validateAuthorization = await checkAuthorization(authorization, 2);
 
             if (!validateAuthorization.status) {
@@ -95,9 +102,16 @@ export default {
 
     async Delete(req: Request, res: Response) {
         const { id: idBook } = req.params;
-        const { authorization } = req.headers;
+        let { authorization } = req.headers;
 
         try {
+            await checkToken(authorization).then(res => {
+                if (res.error) {
+                    throw new Error(res.error);
+                }
+                authorization = res.authorization
+            });
+
             const validateAuthorization = await checkAuthorization(authorization, 2);
 
             if (!validateAuthorization.status) {

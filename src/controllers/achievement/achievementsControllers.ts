@@ -3,7 +3,7 @@ import { connection } from '../../database/connection';
 import { AchievementProps } from '../../types/achievementControllerstTypes';
 import crypto from 'crypto';
 import { useCSV } from '../../utils/useCSV';
-import checkAuthorization from '../../utils/checkAuthorization';
+import checkAuthorization, { checkToken } from '../../utils/checkAuthorization';
 
 export default {
     async index(req: Request, res: Response) {
@@ -23,11 +23,18 @@ export default {
         const id = crypto.randomBytes(4).toString('hex');
         const values = req.body;
         const csv = req.file;
-        const { authorization } = req.headers;
+        let { authorization } = req.headers;
 
         let valuesAchievement: AchievementProps[] | AchievementProps
 
         try {
+            await checkToken(authorization).then(res => {
+                if (res.error) {
+                    throw new Error(res.error);
+                }
+                authorization = res.authorization
+            });
+
             const validateAuthorization = await checkAuthorization(authorization, 3);
 
             if (!validateAuthorization.status) {
@@ -84,9 +91,16 @@ export default {
     async Modify(req: Request, res: Response) {
         const { id: idAchievement } = req.params;
         const newValues = req.body;
-        const { authorization } = req.headers;
+        let { authorization } = req.headers;
 
         try {
+            await checkToken(authorization).then(res => {
+                if (res.error) {
+                    throw new Error(res.error);
+                }
+                authorization = res.authorization
+            });
+
             const validateAuthorization = await checkAuthorization(authorization, 3);
 
             if (!validateAuthorization.status) {
@@ -109,9 +123,15 @@ export default {
 
     async Delete(req: Request, res: Response) {
         const { id: idAchievement } = req.params;
-        const { authorization } = req.headers;
+        let { authorization } = req.headers;
 
         try {
+            await checkToken(authorization).then(res => {
+                if (res.error) {
+                    throw new Error(res.error);
+                }
+                authorization = res.authorization
+            });
             const validateAuthorization = await checkAuthorization(authorization, 3);
 
             if (!validateAuthorization.status) {

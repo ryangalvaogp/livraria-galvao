@@ -5,13 +5,20 @@ import { checkCouponExistenceInSale, validateCupom } from '../../utils/validateC
 import { validateSale } from '../../utils/validateSale';
 import { Response, Request } from 'express';
 import { detailsPurchaseProps, valuesBookSale } from '../../types/bookSalesControllersTypes';
-import checkAuthorization from '../../utils/checkAuthorization';
+import checkAuthorization, { checkToken } from '../../utils/checkAuthorization';
 
 export default {
     async index(req: Request, res: Response) {
-        const { authorization } = req.headers;
+        let { authorization } = req.headers;
 
         try {
+            await checkToken(authorization).then(res => {
+                if (res.error) {
+                    throw new Error(res.error);
+                }
+                authorization = res.authorization
+            });
+
             const validateAuthorization = await checkAuthorization(authorization, 2);
 
             if (!validateAuthorization.status) {
@@ -58,8 +65,9 @@ export default {
         const {
             idclient: idClient,
             idemployee: idEmployee,
-            authorization
         } = req.headers;
+
+        let {authorization} = req.headers
         const idSale = crypto.randomBytes(4).toString('hex');
         const detailsPurchase: detailsPurchaseProps = req.body;
 
@@ -77,6 +85,13 @@ export default {
         };
 
         try {
+            await checkToken(authorization).then(res => {
+                if (res.error) {
+                    throw new Error(res.error);
+                }
+                authorization = res.authorization
+            });
+
             const validateAuthorization = await checkAuthorization(authorization, 2);
 
             if (!validateAuthorization.status) {
@@ -132,9 +147,16 @@ export default {
 
     async showOne(req: Request, res: Response) {
         const { id: idSale } = req.params;
-        const { authorization } = req.headers;
+        let { authorization } = req.headers;
 
         try {
+            await checkToken(authorization).then(res => {
+                if (res.error) {
+                    throw new Error(res.error);
+                }
+                authorization = res.authorization
+            });
+
             const validateAuthorization = await checkAuthorization(authorization, 2);
 
             if (!validateAuthorization.status) {
@@ -178,9 +200,16 @@ export default {
     },
     async Delete(req: Request, res: Response) {
         const { id: idSale } = req.params;
-        const { authorization } = req.headers;
+        let { authorization } = req.headers;
 
         try {
+            await checkToken(authorization).then(res => {
+                if (res.error) {
+                    throw new Error(res.error);
+                }
+                authorization = res.authorization
+            });
+
             const validateAuthorization = await checkAuthorization(authorization, 3);
 
             if (!validateAuthorization.status) {

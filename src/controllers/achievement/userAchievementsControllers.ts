@@ -3,13 +3,20 @@ import { connection } from '../../database/connection';
 import { UserAchievementsProps } from '../../types/userAchievementControllersTypes';
 import { convertDateToPrint, getDateNow } from '../../utils/date';
 import crypto from 'crypto';
-import checkAuthorization from '../../utils/checkAuthorization';
+import checkAuthorization, { checkToken } from '../../utils/checkAuthorization';
 
 export default {
     async index(req: Request, res: Response) {
-        const { authorization } = req.headers;
+        let { authorization } = req.headers;
 
         try {
+            await checkToken(authorization).then(res => {
+                if (res.error) {
+                    throw new Error(res.error);
+                }
+                authorization = res.authorization
+            });
+
             const validateAuthorization = await checkAuthorization(authorization, 2);
 
             if (!validateAuthorization.status) {
@@ -62,9 +69,16 @@ export default {
         const values = req.body;
         values.idAchievement = req.headers.idachievement;
         values.idUser = req.headers.iduser;
-        const { authorization } = req.headers;
+        let { authorization } = req.headers;
 
         try {
+            await checkToken(authorization).then(res => {
+                if (res.error) {
+                    throw new Error(res.error);
+                }
+                authorization = res.authorization
+            });
+
             const validateAuthorization = await checkAuthorization(authorization, 2);
 
             if (!validateAuthorization.status) {
@@ -96,9 +110,16 @@ export default {
 
     async showOne(req: Request, res: Response) {
         const { id: idUser } = req.params;
-        const { authorization } = req.headers;
+        let { authorization } = req.headers;
 
         try {
+            await checkToken(authorization).then(res => {
+                if (res.error) {
+                    throw new Error(res.error);
+                }
+                authorization = res.authorization
+            });
+
             if (idUser !== authorization) {
                 const validateAuthorization = await checkAuthorization(authorization, 2);
 
@@ -154,11 +175,17 @@ export default {
 
     async Modify(req: Request, res: Response) {
         const { id: idUserAchievement } = req.params;
-        const { authorization } = req.headers;
+        let { authorization } = req.headers;
         const newValues = req.body;
         newValues.collectedDate = getDateNow();
 
         try {
+            await checkToken(authorization).then(res => {
+                if (res.error) {
+                    throw new Error(res.error);
+                }
+                authorization = res.authorization
+            });
             const validateAuthorization = await checkAuthorization(authorization, 2);
 
             if (!validateAuthorization.status) {
@@ -183,9 +210,16 @@ export default {
 
     async Delete(req: Request, res: Response) {
         const { id: idUserAchievement } = req.params;
-        const { authorization } = req.headers;
+        let { authorization } = req.headers;
 
         try {
+            await checkToken(authorization).then(res => {
+                if (res.error) {
+                    throw new Error(res.error);
+                }
+                authorization = res.authorization
+            });
+
             const validateAuthorization = await checkAuthorization(authorization, 2);
 
             if (!validateAuthorization.status) {
