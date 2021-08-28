@@ -1,14 +1,21 @@
 import { Response, Request } from 'express';
 import { connection } from '../../database/connection';
 import { UserReadBook, UserReadBookMap } from '../../types/userReadBookControllersTypes';
-import checkAuthorization from '../../utils/checkAuthorization';
+import checkAuthorization, { checkToken } from '../../utils/checkAuthorization';
 import crypto from 'crypto';
 
 export default {
     async index(req: Request, res: Response) {
-        const { authorization } = req.headers;
+        let { authorization } = req.headers;
 
         try {
+            await checkToken(authorization).then(res => {
+                if (res.error) {
+                    throw new Error(res.error);
+                }
+                authorization = res.authorization
+            });
+
             const validateAuthorization = await checkAuthorization(authorization, 2);
 
             if (!validateAuthorization.status) {
@@ -77,12 +84,19 @@ export default {
             review
         } = req.body;
 
-        const {
+        let {
             idUserReadBook = crypto.randomBytes(4).toString('hex'),
             authorization
         } = req.headers;
 
         try {
+            await checkToken(authorization).then(res => {
+                if (res.error) {
+                    throw new Error(res.error);
+                }
+                authorization = res.authorization
+            });
+            
             const validateAuthorization = await checkAuthorization(authorization, 1);
 
             if (!validateAuthorization.status) {
@@ -115,10 +129,17 @@ export default {
     },
 
     async showOne(req: Request, res: Response) {
-        const { authorization } = req.headers;
+        let { authorization } = req.headers;
         const { id: idUser } = req.params;
 
         try {
+            await checkToken(authorization).then(res => {
+                if (res.error) {
+                    throw new Error(res.error);
+                }
+                authorization = res.authorization
+            });
+
             if (idUser !== authorization) {
                 const validateAuthorization = await checkAuthorization(authorization, 2);
 
@@ -180,10 +201,16 @@ export default {
     },
     async Modify(req: Request, res: Response) {
         const { id: idUserReadBook } = req.params;
-        const { authorization, iduser } = req.headers;
+        let { authorization, iduser } = req.headers;
         const dados: UserReadBook = req.body;
 
         try {
+            await checkToken(authorization).then(res => {
+                if (res.error) {
+                    throw new Error(res.error);
+                }
+                authorization = res.authorization
+            });
             if (iduser !== authorization) {
                 const validateAuthorization = await checkAuthorization(authorization, 2);
 
@@ -209,9 +236,15 @@ export default {
 
     async Delete(req: Request, res: Response) {
         const { id: idUserReadBook } = req.params;
-        const { authorization, iduser } = req.headers;
+        let { authorization, iduser } = req.headers;
 
         try {
+            await checkToken(authorization).then(res => {
+                if (res.error) {
+                    throw new Error(res.error);
+                }
+                authorization = res.authorization
+            });
             if (iduser !== authorization) {
                 const validateAuthorization = await checkAuthorization(authorization, 3);
 
