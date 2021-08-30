@@ -50,6 +50,7 @@ export type UserProps = {
             premium: boolean
             registrationDate: string
             password: string
+            avatarurl:string
         }
     }
 }

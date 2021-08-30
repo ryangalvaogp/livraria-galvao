@@ -12,3 +12,5 @@ userControllers.post('/user/premium/:id', usersControllers.premium);
 userControllers.post('/auth', profileControllers.auth);
 userControllers.post('/forgotPassword', profileControllers.forgotPassword);
 userControllers.post('/resetPassword', profileControllers.resetPassword);
+
+userControllers.post('/signInWithGoogle', profileControllers.SignInWithGoogle);
