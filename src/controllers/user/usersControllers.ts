@@ -19,7 +19,7 @@ export default {
                 authorization = res.authorization
             });
 
-            const validateAuthorization = await checkAuthorization(authorization, 1);
+            const validateAuthorization = await checkAuthorization(authorization, 2);
 
             if (!validateAuthorization.status) {
                 throw new Error(validateAuthorization.error);

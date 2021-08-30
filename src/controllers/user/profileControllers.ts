@@ -1,12 +1,13 @@
 import { Response, Request } from 'express';
 import { connection } from '../../database/connection';
-import { user } from '../../types/usersControllersTypes';
+import { user, UserProps } from '../../types/usersControllersTypes';
 import checkAuthentication from '../../utils/checkAuthentication';
 import generateToken from '../../utils/generateToken';
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { transport } from '../../config/mailer';
 import { PasswordRecoveryLog } from '../../types/AuthControllersTypes';
+import { getDateNow } from '../../utils/date';
 
 export default {
     async auth(req: Request, res: Response) {
@@ -126,8 +127,49 @@ export default {
             });
         };
     },
-    async Modify(req: Request, res: Response) {
+    async SignInWithGoogle(req: Request, res: Response) {
+        const {
+            email,
+            password,
+        } = req.body;
 
+        try {
+            bcrypt.genSalt(10, function (err, salt) {
+                bcrypt.hash(password, salt, async function (err, hash) {
+                    const values: UserProps['create']['crud'] = {
+                        id: req.body.uid,
+                        xp: 0,
+                        registrationDate: getDateNow(),
+                        password: hash,
+                        email: email.toLowerCase(),
+                        cell: req.body.phoneNumber,
+                        name: req.body.displayName,
+                        avatarurl: req.body.photoURL,
+                        cep: req.body.cep,
+                        city: req.body.city,
+                        cpf: req.body.cpf,
+                        n: req.body.n,
+                        neighborhood: req.body.neighborhood,
+                        street: req.body.street,
+                        premium: req.body.premium || false,
+                        permission: req.body.permission || 1,
+                    };
+
+                    await connection<user>('user').insert(values);
+
+                    const token = generateToken(values.id);
+                    return res.json({
+                        status: `User ${values.name} Was Successfully Registration with google `,
+                        token
+                    });
+                });
+            });
+        } catch (error) {
+            return res.json({
+                status: "Error registering user with google",
+                error: error.message,
+            });
+        }
     },
     async Delete(req: Request, res: Response) {
 
