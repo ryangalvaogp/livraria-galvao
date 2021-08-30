@@ -2,7 +2,7 @@ import { Response, Request, NextFunction } from 'express';
 import { connection } from '../../database/connection';
 import { user, UserProps } from '../../types/usersControllersTypes';
 import crypto from 'crypto';
-import { getDateNow } from '../../utils/date';
+import { convertDateToPrint, getDateNow } from '../../utils/date';
 import checkAuthorization, { checkToken } from '../../utils/checkAuthorization';
 import bcrypt from 'bcrypt';
 import generateToken from '../../utils/generateToken';
@@ -44,7 +44,7 @@ export default {
                         n: user.n,
                     },
                     xp: user.xp,
-                    registrationDate: user.registrationDate,
+                    registrationDate: convertDateToPrint(user.registrationDate),
                     avatarUrl: user.avatarurl
                 };
             });
@@ -65,13 +65,14 @@ export default {
         const xp = 0;
 
         try {
-            await checkToken(authorization).then(res => {
-                if (res.error) {
-                    throw new Error(res.error);
-                }
-                authorization = res.authorization
-            });
+            
             if (user.permission > 1) {
+                await checkToken(authorization).then(res => {
+                    if (res.error) {
+                        throw new Error(res.error);
+                    }
+                    authorization = res.authorization
+                });
 
                 const validateAuthorization = await checkAuthorization(authorization, 3);
 
@@ -148,7 +149,7 @@ export default {
                     n: user.n,
                 },
                 xp: user.xp,
-                registrationDate: user.registrationDate,
+                registrationDate: convertDateToPrint(user.registrationDate),
                 avatarUrl: user.avatarurl
             };
 
