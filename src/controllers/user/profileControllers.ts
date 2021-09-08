@@ -7,7 +7,7 @@ import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { transport } from '../../config/mailer';
 import { PasswordRecoveryLog } from '../../types/AuthControllersTypes';
-import { getDateNow } from '../../utils/date';
+import { convertDateToPrint, getDateNow } from '../../utils/date';
 
 export default {
     async auth(req: Request, res: Response) {
@@ -171,7 +171,45 @@ export default {
             });
         }
     },
-    async Delete(req: Request, res: Response) {
+    async LoginInWithGoogle(req: Request, res: Response) {
+        const {
+            email,
+            uid:id
+        } = req.body;
 
+        try {
+            const user = await connection<user>('user')
+                .where('email', email)
+                .where('id', id)
+                .select('*')
+                .first();
+
+            const userFormated = {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                cpf: user.cpf,
+                cell: user.cell,
+                permission: user.permission,
+                premium: user.premium,
+                address: {
+                    street: user.street,
+                    neighborhood: user.neighborhood,
+                    city: user.city,
+                    cep: user.cep,
+                    n: user.n,
+                },
+                xp: user.xp,
+                registrationDate: convertDateToPrint(user.registrationDate),
+                avatarUrl: user.avatarurl
+            };
+
+            return res.json(userFormated);
+        } catch (error) {
+            return res.json({
+                status: "Error loging user with google",
+                error: error.message,
+            });
+        }
     },
 }

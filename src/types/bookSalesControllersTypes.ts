@@ -29,3 +29,8 @@ export type valuesBookSale = {
         isCollected: boolean
         collectedDate: string}
 }
+
+export type valuesBookSaleUpdate = {
+    isClosed?:boolean
+    closedDate?:string
+}

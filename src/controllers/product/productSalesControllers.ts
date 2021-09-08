@@ -6,6 +6,7 @@ import { validateSale } from '../../utils/validateSale';
 import { Response, Request } from 'express';
 import { detailsPurchaseProps, valuesBookSale } from '../../types/bookSalesControllersTypes';
 import checkAuthorization, { checkToken } from '../../utils/checkAuthorization';
+import { valuesProductSaleUpdate } from '../../types/productSalesControllersType';
 
 export default {
     async index(req: Request, res: Response) {
@@ -191,7 +192,40 @@ export default {
         };
     },
     async Modify(req: Request, res: Response) {
+        const { id: idSale } = req.params;
+        let { authorization } = req.headers;
+        let values:valuesProductSaleUpdate = req.body;
 
+        if (values.isClosed) values.closedDate = getDateNow();
+
+        try {
+            await checkToken(authorization).then(res => {
+                if (res.error) {
+                    throw new Error(res.error);
+                }
+                authorization = res.authorization
+            });
+
+            const validateAuthorization = await checkAuthorization(authorization, 3);
+
+            if (!validateAuthorization.status) {
+                throw new Error(validateAuthorization.error);
+            };
+
+            await connection('productSales')
+                .where('idSale', idSale)
+                .update(values);
+
+            return res.json({
+                status: `Sale information has been updated successfully`,
+                values
+            })
+        } catch (error) {
+            return res.json({
+                status: `Error updating product sale`,
+                error: error.message,
+            });
+        }
     },
     async Delete(req: Request, res: Response) {
         const { id: idSale } = req.params;

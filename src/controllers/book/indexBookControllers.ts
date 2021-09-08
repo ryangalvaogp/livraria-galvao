@@ -20,6 +20,7 @@ bookControllers.delete('/stock/book/:id', bookStockControllers.Delete);
 bookControllers.get('/purchase/book', bookSalesControllers.index);
 bookControllers.get('/purchase/book/:id', bookSalesControllers.showOne);
 bookControllers.post('/purchase/book/:id', bookSalesControllers.create);
+bookControllers.put('/purchase/book/:id', bookSalesControllers.Modify);
 bookControllers.delete('/purchase/book/:id', bookSalesControllers.Delete);
 
 bookControllers.get('/passport/', bookUserReadControllers.index);
