@@ -180,7 +180,6 @@ export default {
         try {
             const user = await connection<user>('user')
                 .where('email', email)
-                .where('id', id)
                 .select('*')
                 .first();
 
