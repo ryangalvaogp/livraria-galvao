@@ -19,4 +19,5 @@ productControllers.delete('/stock/product/:id', productStockControllers.Delete);
 productControllers.get('/purchase/product', productSalesControllers.index);
 productControllers.get('/purchase/product/:id', productSalesControllers.showOne);
 productControllers.post('/purchase/product/:id', productSalesControllers.create);
+productControllers.put('/purchase/product/:id', productSalesControllers.Modify);
 productControllers.delete('/purchase/product/:id', productSalesControllers.Delete);

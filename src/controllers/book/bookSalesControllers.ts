@@ -4,7 +4,7 @@ import { getDateNow } from '../../utils/date';
 import { checkCouponExistenceInSale, validateCupom } from '../../utils/validateCoupon';
 import { validateSale } from '../../utils/validateSale';
 import { Response, Request } from 'express';
-import { detailsPurchaseProps, valuesBookSale } from '../../types/bookSalesControllersTypes';
+import { detailsPurchaseProps, valuesBookSale, valuesBookSaleUpdate } from '../../types/bookSalesControllersTypes';
 import checkAuthorization, { checkToken } from '../../utils/checkAuthorization';
 
 export default {
@@ -67,7 +67,7 @@ export default {
             idemployee: idEmployee,
         } = req.headers;
 
-        let {authorization} = req.headers
+        let { authorization } = req.headers
         const idSale = crypto.randomBytes(4).toString('hex');
         const detailsPurchase: detailsPurchaseProps = req.body;
 
@@ -196,6 +196,40 @@ export default {
         };
     },
     async Modify(req: Request, res: Response) {
+        const { id: idSale } = req.params;
+        let { authorization } = req.headers;
+        let values:valuesBookSaleUpdate = req.body;
+
+        if (values.isClosed) values.closedDate = getDateNow();
+
+        try {
+            await checkToken(authorization).then(res => {
+                if (res.error) {
+                    throw new Error(res.error);
+                }
+                authorization = res.authorization
+            });
+
+            const validateAuthorization = await checkAuthorization(authorization, 3);
+
+            if (!validateAuthorization.status) {
+                throw new Error(validateAuthorization.error);
+            };
+
+            await connection('bookSales')
+                .where('idSale', idSale)
+                .update(values);
+
+            return res.json({
+                status: `Sale information has been updated successfully`,
+                values
+            })
+        } catch (error) {
+            return res.json({
+                status: `Error updating book sale`,
+                error: error.message,
+            });
+        }
 
     },
     async Delete(req: Request, res: Response) {

@@ -11,6 +11,8 @@ exports.up = function (knex) {
             table.float('factoryPrice', 8, 2).notNullable();
             table.string('saleDate').notNullable();
             table.string('paymentMethod').notNullable();
+            table.boolean('isClosed').defaultTo(false);
+            table.string('closedDate').defaultTo(null);
 
             table.foreign('idBook')
                 .references('id')

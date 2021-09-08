@@ -19,3 +19,8 @@ export type valuesProductSale = {
     saleDate: string
     
 }
+
+export type valuesProductSaleUpdate = {
+    isClosed?:boolean
+    closedDate?:string
+}
