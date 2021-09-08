@@ -14,3 +14,4 @@ userControllers.post('/forgotPassword', profileControllers.forgotPassword);
 userControllers.post('/resetPassword', profileControllers.resetPassword);
 
 userControllers.post('/signInWithGoogle', profileControllers.SignInWithGoogle);
+userControllers.post('/loginInWithGoogle', profileControllers.LoginInWithGoogle);
