@@ -3,6 +3,7 @@ import { connection } from '../../database/connection';
 import crypto from 'crypto';
 import { Book, BookProps } from '../../types/booksControllers'
 import checkAuthorization, { checkToken } from '../../utils/checkAuthorization';
+import useCSV from '../../utils/useCSV';
 
 export default {
     async index(req: Request, res: Response) {
@@ -21,8 +22,8 @@ export default {
     async create(req: Request, res: Response) {
         const book = req.body;
         let { authorization } = req.headers;
-        const id = crypto.randomBytes(4).toString('hex');
-
+        const id = crypto.randomBytes(4).toString('hex'); //É necessário pois será utilizado 2x
+        const csv = req.file;
         const values: BookProps['create']['crud']['tableBook'] = book;
         values.id = id;
 
@@ -39,10 +40,10 @@ export default {
             cddcdu: values.cddcdu,
         };
 
-
         try {
             await checkToken(authorization).then(res => {
                 if (res.error) {
+
                     throw new Error(res.error);
                 }
                 authorization = res.authorization
@@ -51,27 +52,80 @@ export default {
             const validateAuthorization = await checkAuthorization(authorization, 2);
 
             if (!validateAuthorization.status) {
+
+
                 throw new Error(validateAuthorization.error);
             };
-            if (values.amount && values.salePrice && values.factoryPrice) {
-                const valuesBookStock = {
-                    idBook: id,
-                    amount: values.amount,
-                    salePrice: values.salePrice,
-                    factoryPrice: values.factoryPrice,
+
+            //Inserção através arquivo CSV
+
+            if (req.file) {
+                try {
+                    let valuesBook = await useCSV(csv.path, 'books');
+                    var message;
+
+                    //@ts-ignore
+                    valuesBook.map(async (book: BookProps['create']['crud']['tableBook']) => {
+                        if (book.amount || book.salePrice || book.factoryPrice) {
+                            let stockValues = {
+                                idBook: book.id,
+                                amount: book.amount,
+                                salePrice: book.salePrice,
+                                factoryPrice: book.factoryPrice,
+                            };
+
+                            delete book.amount;
+                            delete book.salePrice;
+                            delete book.factoryPrice;
+
+                            await connection('books').insert(book);
+                            await connection('bookStock').insert(stockValues);
+                            message = 'The book has been successfully registered and added to stock';
+                        } else {
+                            await connection('books').insert(book);
+                            message = `The book has been successfully registered but not added to stock`;
+                        }
+                    });
+
+                    return res.send(message)
+                } catch (error) {
+                    return res.json({
+                        status: "Error registering the book on CSV",
+                        error,
+                        values
+                    });
                 };
-
-                await connection('books').insert(valuesBook);
-                await connection('bookStock').insert(valuesBookStock);
-
-                return res.json({ status: `The book has been successfully registered and added to stock` });
-            } else {
-                await connection('books').insert(valuesBook);
-                return res.json({ status: `The book has been successfully registered but not added to stock` });
             };
+
+            //Inserção Normal
+            try {
+                if (values.amount && values.salePrice && values.factoryPrice && !req.file) {
+                    const valuesBookStock = {
+                        idBook: id,
+                        amount: values.amount,
+                        salePrice: values.salePrice,
+                        factoryPrice: values.factoryPrice,
+                    };
+
+                    await connection('books').insert(valuesBook);
+                    await connection('bookStock').insert(valuesBookStock);
+
+                    return res.json({ status: `The book has been successfully registered and added to stock` });
+                } else {
+                    await connection('books').insert(valuesBook);
+                    return res.json({ status: `The book has been successfully registered but not added to stock` });
+                };
+            } catch (error) {
+                return res.json({
+                    status: "Error registering the book",
+                    error,
+                    values
+                });
+            }
+
         } catch (error) {
             return res.json({
-                status: "Error registering the book",
+                status: "Error generaly",
                 error,
                 values
             });

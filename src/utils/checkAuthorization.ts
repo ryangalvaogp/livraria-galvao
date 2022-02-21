@@ -8,7 +8,7 @@ export default async function checkAuthorization(id: string, rolePermissionLevel
             .where('id', id)
             .select('id', 'permission')
             .first();
-
+            
         if (!user) {
             throw new Error('Current authentication user is not allowed to perform this operation, or user does not exist');
         };
@@ -32,7 +32,7 @@ export default async function checkAuthorization(id: string, rolePermissionLevel
 
 export async function checkToken(authorization: string) {
     try {
-       
+        
         if (!authorization) {
             throw new Error('No token provided');
         };
@@ -44,6 +44,9 @@ export async function checkToken(authorization: string) {
         };
         const [scheme, token] = parts;
 
+        
+      
+
         if (!/^b21db70a38b2a93331dd1887f00588f5$/i.test(scheme)) {
             throw new Error('token malformatted');
         };
@@ -52,6 +55,7 @@ export async function checkToken(authorization: string) {
             if (err) throw new Error('token invalid');
 
             authorization = decoded.id;
+            
         });
 
         return {

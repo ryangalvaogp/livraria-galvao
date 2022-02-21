@@ -2,7 +2,7 @@ import { Response, Request } from 'express';
 import { connection } from '../../database/connection';
 import { AchievementProps } from '../../types/achievementControllerstTypes';
 import crypto from 'crypto';
-import { useCSV } from '../../utils/useCSV';
+import useCSV from '../../utils/useCSV';
 import checkAuthorization, { checkToken } from '../../utils/checkAuthorization';
 
 export default {
@@ -25,7 +25,7 @@ export default {
         const csv = req.file;
         let { authorization } = req.headers;
 
-        let valuesAchievement: AchievementProps[] | AchievementProps
+        let valuesAchievement
 
         try {
             await checkToken(authorization).then(res => {
@@ -54,7 +54,7 @@ export default {
             };
 
             if (req.file && !req.body) {
-                valuesAchievement = await useCSV(csv.path);
+                valuesAchievement = await useCSV(csv.path, 'achievement');
                 for (var i = 0; i < valuesAchievement.length; i++) {
                     console.log(valuesAchievement[i])
                     await connection('achievement').insert(valuesAchievement[i]);
